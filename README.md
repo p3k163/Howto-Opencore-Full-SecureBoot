@@ -6,9 +6,9 @@ The source of all the content involved is listed below.
 This tutorial only simplifies the relevant content, it is recommended to visit the original author’s link to learn more details.
 
 References:  
-[1]. Taming UEFI SecureBoot https://sudonull.com/post/92362-Taming-UEFI-SecureBoot
-[2]. OpenCore https://github.com/acidanthera/OpenCorePkg
-[3]. Opencore Post-install https://dortania.github.io/OpenCore-Post-Install/#how-to-follow-this-guide
+[1]. Taming UEFI SecureBoot https://sudonull.com/post/92362-Taming-UEFI-SecureBoot  
+[2]. OpenCore https://github.com/acidanthera/OpenCorePkg  
+[3]. Opencore Post-install https://dortania.github.io/OpenCore-Post-Install/#how-to-follow-this-guide  
 
 Before we start:
 1. Make sure the Secure Boot function in BIOS is unlocked.
@@ -144,9 +144,9 @@ Reboot to OpenCore picker, select the Recovery partition
 启用BIOS密码、UEFI安全引导、OpenCore密码、文件保险箱和苹果安全引导将提供不输于白苹果T2芯片的系统安全性，甚至Secure Boot的存在将可以使部分机器满足Windows 10的安全性需求，这是白苹果T2所无法提供的，每台机器的配置、密钥和ApECID都将不同，这是完全属于你自己的安全环境，祝好运。  
 
 参考：  
-[1]. Taming UEFI SecureBoot https://sudonull.com/post/92362-Taming-UEFI-SecureBoot
-[2]. OpenCore https://github.com/acidanthera/OpenCorePkg
-[3]. Opencore Post-install https://dortania.github.io/OpenCore-Post-Install/#how-to-follow-this-guide
+[1]. Taming UEFI SecureBoot https://sudonull.com/post/92362-Taming-UEFI-SecureBoot  
+[2]. OpenCore https://github.com/acidanthera/OpenCorePkg  
+[3]. Opencore Post-install https://dortania.github.io/OpenCore-Post-Install/#how-to-follow-this-guide  
 
 开始之前：
 1. 确认BIOS内的Secure Boot配置功能已解锁
