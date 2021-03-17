@@ -124,3 +124,150 @@ Note:
 2. After setting up the ApECID, you may need to reinstall the whole system or personalise your MacOS, see below instructions come from OpenCore document:
 To personalise an existing operating system, use the bless command after loading to macOS DMG recovery. Mount the system volume partition, unless it has already been mounted, and execute the following command:  
 bless bless --folder "/Volumes/Macintosh HD/System/Library/CoreServices" --bootefi --personalize  
+3. After enable the Apple Secure Boot, the Installer USB may failed to boot, it is required to install the MacOS through the recovery environment and download installer from the network. You can create an external Recovery environment by using macrecovery inside Utilities from OpenCore package, then install fresh MacOS again. But remember, if you set DmgLoading to Disabled, the downloaded recovery environment will not boot, it is required to switch back to Signed, however the recovery environment created by the previous MacOS installer is still bootable.  
+Open terminal and change directory to ./OpenCore-a.b.c-RELEASE/Utilities/macrecovery  
+Type this command ./macrecovery.py -b Mac-E43C1C25D4880AD6 -m 00000000000000000 -os latest download  
+Press enter  
+Create a folder with name "com.apple.recovery.boot" under the root of any partition formatted to (APFS, FAT-32)  
+Copy donwloaded BaseSystem.chunklist and BaseSystem.dmg to folder com.apple.recovery.boot  
+Reboot to OpenCore picker, select the Recovery partition  
+4. Sign efi files can even allow Linux boot loader to be supported by Secure Boot.
+5. Set BIOS password and enable FileVault2 are strongly recommended to protect the whole secure boot environment.
+
+===============================================  
+
+本教程包含来自其他作者的知识和代码。  
+原作者拥有相关内容的版权。  
+所有相关内容的来源都列在了下方。  
+本教程只是简化了相关内容，建议访问原作者的链接以了解更多背后的详细知识。  
+
+启用BIOS密码、UEFI安全引导、OpenCore密码、文件保险箱和苹果安全引导将提供不输于白苹果T2芯片的系统安全性，甚至Secure Boot的存在将可以使部分机器满足Windows 10的安全性需求，这是白苹果T2所无法提供的，每台机器的配置、密钥和ApECID都将不同，这是完全属于你自己的安全环境，祝好运。  
+
+参考：  
+[1]. Taming UEFI SecureBoot https://sudonull.com/post/92362-Taming-UEFI-SecureBoot
+[2]. OpenCore https://github.com/acidanthera/OpenCorePkg
+[3]. Opencore Post-install https://dortania.github.io/OpenCore-Post-Install/#how-to-follow-this-guide
+
+开始之前：
+1. 确认BIOS内的Secure Boot配置功能已解锁
+
+准备工作：
+1. 下载最新的 OpenCore release版本 (https://github.com/acidanthera/OpenCorePkg)。
+2. 下载任何Linux安装盘或准备可用的Linux系统（Ubuntu、Debian等）。
+3. 下载 ProperTree (https://github.com/corpnewt/ProperTree)。
+4. Microsoft KEK CA 2011 证书 (http://go.microsoft.com/fwlink/?LinkId=321185)。
+5. Microsoft Windows Production CA 2011 证书 (http://go.microsoft.com/fwlink/?LinkID=321192)。
+6. Microsoft UEFI driver signing CA 2011 证书 (http://go.microsoft.com/fwlink/?LinkId=321194)。
+7. 一个空的U盘。
+
+来点不一样的:
+1. 添加密码来保护敏感操作.
+解压缩下载的OpenCore release并切换目录至./OpenCore-a.b.c-RELEASE/Utilities/ocpasswordgen  
+打开终端，将ocpasswordgen可执行文件拖进终端并按回车  
+输入要设定的密码并按回车  
+解压缩下载的ProperTree并切换目录至./ProperTree  
+打开一个新的终端窗口，将ProperTree.command拖进终端并按回车  
+挂载EFI分区  
+使用ProperTree打开config.plist并导航至ROOT->MISC->Security  
+设置EnablePassword为True  
+将ocpasswordgen生成的PasswordHash复制到ProperTree里的PasswordHash  
+将ocpasswordgen生成的PasswordSalt复制到ProperTree里的PasswordSalt  
+保存config.plist并且尝试启动OpenCore，等待选择系统界面出现，检查是否要求密码  
+2. 启用苹果安全引导。
+解压缩下载的ProperTree并切换目录至./ProperTree  
+挂载EFI分区  
+打开一个新的终端窗口，将ProperTree.command拖进终端并按回车  
+使用ProperTree打开config.plist并导航至ROOT->MISC->Security  
+根据所选机型设置 SecureBootModel 为正确的值（仅在使用的机型不在下列机型中时才选用 x86legacy，与你的机器是否物理上存在T2芯片无关）  
+• j137 — iMacPro1,1 (December 2017)  
+• j680 — MacBookPro15,1 (July 2018)  
+• j132 — MacBookPro15,2 (July 2018)  
+• j174 — Macmini8,1 (October 2018)  
+• j140k — MacBookAir8,1 (October 2018)  
+• j780 — MacBookPro15,3 (May 2019)  
+• j213 — MacBookPro15,4 (July 2019)  
+• j140a — MacBookAir8,2 (July 2019)  
+• j152f — MacBookPro16,1 (November 2019)  
+• j160 — MacPro7,1 (December 2019)  
+• j230k — MacBookAir9,1 (March 2020)  
+• j214k — MacBookPro16,2 (May 2020)  
+• j223 — MacBookPro16,3 (May 2020)  
+• j215 — MacBookPro16,4 (June 2020)  
+• j185 — iMac20,1 (August 2020)  
+• j185f — iMac20,2 (August 2020)  
+• x86legacy — 没有T2芯片的 Mac 机型以及虚拟机。 最低系统版本 macOS 11.0.1 (20B29)  
+使用 Python3 生成ApECID (python3 -c 'import secrets; print(secrets.randbits(64))')  
+复制输出的数字到ProperTree的ApECID  
+设置DmgLoading为Signed（或Disabled来实现最大安全性）
+3. 生成校验值来保护OpenCore的文件，这可以检测出对文件的任何修改（包括config.plist）。
+挂载EFI分区  
+解压缩下载的OpenCore release并切换目录至./OpenCore-a.b.c-RELEASE/Utilities/ocpasswordgen  
+打开终端，切换目录至/Volumes/EFI/Utilities/CreateVault  
+在终端内输入./sign.command并按回车
+解压缩下载的ProperTree并切换目录至./ProperTree  
+打开一个新的终端窗口，将ProperTree.command拖进终端并按回车  
+使用ProperTree打开config.plist并导航至ROOT->MISC->Security  
+设置Vault为Secure
+4. 引导Linux安装盘或进入Linux系统并安装工具。
+Ubuntu: sudo apt install efitools openssl sbsigntool  
+5. 生成Platform Key、Key Exchange Key和Image Signing Key。在此过程中你可以创建任何密码但要牢记。
+openssl req -new -x509 -newkey rsa:2048 -sha256 -days 365 -subj "/CN=Platform Key" -keyout PK.key -out PK.pem  
+openssl req -new -x509 -newkey rsa:2048 -sha256 -days 365 -subj "/CN=Key Exchange Key" -keyout KEK.key -out KEK.pem  
+openssl req -new -x509 -newkey rsa:2048 -sha256 -days 365 -subj "/CN=Image Signing Key" -keyout ISK.key -out ISK.pem  
+6. 转换Microsoft证书为pem格式。
+openssl x509 -in MicCorKEKCA2011_2011-06-24.crt -inform DER -out MsKEK.pem -outform PEM  
+openssl x509 -in MicWinProPCA2011_2011-10-19.crt -inform DER -out MsWin.pem -outform PEM  
+openssl x509 -in MicCorUEFCA2011_2011-06-27.crt -inform DER -out UEFI.pem -outform PEM  
+7. 转换证书为esl格式.
+cert-to-efi-sig-list -g "$(uuidgen)" PK.pem PK.esl  
+cert-to-efi-sig-list -g "$(uuidgen)" KEK.pem KEK.esl  
+cert-to-efi-sig-list -g "$(uuidgen)" ISK.pem ISK.esl  
+cert-to-efi-sig-list -g "$(uuidgen)" MsWin.pem MsWin.esl  
+cert-to-efi-sig-list -g "$(uuidgen)" UEFI.pem UEFI.esl  
+8. 复制所有的esl证书到一个新的文件夹并整合KEK和ISK。
+cat KEK.esl MsKEK.esl > NewKEK.esl  
+cat ISK.esl MsWin.esl UEFI.esl > db.esl  
+9. 复制NewKEK.esl、KEK.pem、KEK.key、PK.key、PK.pem、PK.esl和db.esl到一个新的文件夹并重命名NewKEK.esl为KEK.esl，之后使用PK对esl证书进行签名。
+sign-efi-sig-list -k PK.key -c PK.pem PK PK.esl PK.auth  
+sign-efi-sig-list -k PK.key -c PK.pem KEK KEK.esl KEK.auth  
+sign-efi-sig-list -k KEK.key -c KEK.pem db db.esl db.auth  
+10. 格式化U盘为FAT-32格式并复制PK.auth、KEK.auth和db.auth到U盘。
+11. 复制每个OpenCore用到的efi文件到包含ISK.key和ISK.pem的文件夹。
+EFI Drivers (/EFI/OC/Drivers): AudioDxe.efi、NvmExpressDxe.efi、OpenCanopy.efi、OpenPartitionDxe.efi、OpenRuntime.efi等。  
+EFI Tools (/EFI/OC/Tools): CleanNvram.efi、OpenShell.efi、VerifyMsrE2.efi等。  
+OpenCore (/EFI/OC): OpenCore.efi  
+BootX64 (/EFI/BOOT): BOOTx64.efi  
+12. 对每个OpenCore的efi文件进行签名。
+sbsign --key ISK.key --cert ISK.pem --output Signed_AudioDxe.efi AudioDxe.efi  
+sbsign --key ISK.key --cert ISK.pem --output Signed_NvmExpressDxe.efi NvmExpressDxe.efi  
+sbsign --key ISK.key --cert ISK.pem --output Signed_CleanNvram.efi CleanNvram.efi  
+sbsign --key ISK.key --cert ISK.pem --output Signed_OpenShell.efi OpenShell.efi  
+sbsign --key ISK.key --cert ISK.pem --output Signed_OpenCore.efi OpenCore.efi  
+确保签名了所有efi文件...  
+重命名带有Signed_的efi文件为原始名字并替换未签名的efi文件。  
+13. 复制MacOS的引导文件到U盘根目录（/System/Library/CoreServices/boot.efi）。
+14. 插入包含.auth文件的U盘并启动至BIOS设置界面。
+前往Security->Secure Boot  
+选择Restore Factory Keys并再次重启至BIOS设置  
+设置Secure Boot Mode为Custom  
+前往Key Management  
+向下滚动至Platform Key(PK)并按回车，选择Update，然后选择No来从U盘加载auth文件，选择带有\USB(x,x)\的文件系统路径并导航至PK.auth然后按回车  
+向下滚动至Key Exchange Keys并按回车，选择Update，然后选择No来从U盘加载auth文件，选择带有\USB(x,x)\的文件系统路径并导航至KEK.auth然后按回车  
+向下滚动至Authorized Signatures并按回车，选择Update，然后选择No来从U盘加载auth文件，选择带有\USB(x,x)\的文件系统路径并导航至db.auth然后按回车  
+向上滚动至Enroll EFI Image，选择带有\USB(x,x)\的文件系统路径并导航至boot.efi然后按回车  
+15. 重启到OpenCore并检查是否系统可以正常启动（MacOS和Windows）
+
+注意：
+1. 在设置OpenCore密码之后，引导至默认系统不需要任何密码，可以将MISC->Boot->ShowPicker设置为False来隐藏启动默认系统时的密码输入界面。同时仍然可以通过在引导OpenCore的时候反复按ESC来访问引导选择界面。
+2. 在设置ApECID之后，可能需要重新安装整个系统或个性化MacOS，参看下面来自OpenCore文档的介绍：
+在引导至MacOS恢复分区后使用bless命令来个性化一个已有的操作系统。挂载系统分区，等待系统完全挂载之后执行下面的命令：  
+bless bless --folder "/Volumes/Macintosh HD/System/Library/CoreServices" --bootefi --personalize  
+3. 在启用苹果安全引导之后，安装器制作的U盘可能会无法启动，这需要通过恢复环境以及网络下载安装器来重新安装MacOS。你可以通过OpenCore包里Utilities文件夹下的macrecovery来创造一个外置的恢复环境，然后安装全新的MacOS。但是注意，如果你在之前的设定中将DmgLoading设为了Disabled，下载的恢复环境将无法启动，需要将设置切换回Signed， 然而由之前的MacOS安装器创建的恢复环境将仍可启动。
+打开终端并切换目录至./OpenCore-a.b.c-RELEASE/Utilities/macrecovery  
+输入命令./macrecovery.py -b Mac-E43C1C25D4880AD6 -m 00000000000000000 -os latest download  
+敲回车  
+在任何格式化为APFS或FAT-32的分区根目录创建一个名为com.apple.recovery.boot的文件夹  
+复制下载的aseSystem.chunklist和BaseSystem.dmg到com.apple.recovery.boot文件夹  
+重启至OpenCore引导选择界面，选择恢复分区  
+4. 签名efi文件可以使得Linux引导器被Secure Boot所支持。
+5. 强烈推荐设置BIOS密码和启用文件保险箱来保护整个Secure Boot环境。
